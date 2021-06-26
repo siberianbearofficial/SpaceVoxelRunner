@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class PlayButtonController : MonoBehaviour
@@ -20,6 +21,9 @@ public class PlayButtonController : MonoBehaviour
             } else if (name == "PlayButton")
             {
                 button.onClick.AddListener(OnPlayButtonClick);
+            } else if (name == "MainMenuButton")
+            {
+                button.onClick.AddListener(OnMainMenuButtonClick);
             }
         }
     }
@@ -36,5 +40,10 @@ public class PlayButtonController : MonoBehaviour
         Game.paused = false;
         MainCanvas.SetActive(true);
         PauseCanvas.SetActive(false);
+    }
+
+    void OnMainMenuButtonClick()
+    {
+        SceneManager.LoadScene("MenuScene");
     }
 }

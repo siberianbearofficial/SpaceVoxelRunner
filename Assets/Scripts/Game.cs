@@ -7,15 +7,24 @@ public class Game : MonoBehaviour
     public static bool paused;
     public GameObject player;
     public Transform rightPos, centerPos, leftPos;
-    public float speed;
-    public int posInt; // -1 : left; 0 : center; 1 : right;
-    public bool needChangeLine;
-    public Transform target;
+    public float lrSpeed;
+    public float jumpForce;
+    public float jumpCoef;
+    private int posInt; // -1 : left; 0 : center; 1 : right;
+    private bool needChangeLine;
+    private Transform target;
+    public bool isGrounded;
+    private bool needJump;
+
+    public int coins;
 
     void Start()
     {
+        coins = 0;
         needChangeLine = false;
         posInt = 0;
+        needJump = false;
+        CoinsTextScript.UpdateUI(coins);
     }
 
     void Update()
@@ -50,6 +59,26 @@ public class Game : MonoBehaviour
                 }
                 needChangeLine = true;
             }
+            if (Input.GetKeyDown(KeyCode.Space))
+            {
+                if (isGrounded)
+                {
+                    needJump = true;
+                    StartCoroutine(StopJump());
+                }
+            }
+            if (player.transform.position.x < leftPos.position.x)
+            {
+                player.transform.position = new Vector3(leftPos.position.x, player.transform.position.y, player.transform.position.z);
+            }
+            if (player.transform.position.x > rightPos.position.x)
+            {
+                player.transform.position = new Vector3(rightPos.position.x, player.transform.position.y, player.transform.position.z);
+            }
+            if (player.transform.position.z > 1 || player.transform.position.z < 1)
+            {
+                player.transform.position = new Vector3(player.transform.position.x, player.transform.position.y, 1);
+            }
         }
     }
 
@@ -61,13 +90,11 @@ public class Game : MonoBehaviour
             {
                 ChangeLine();
             }
-            Move();
+            if (needJump)
+            {
+                Jump();
+            }
         }
-    }
-
-    void Move()
-    {
-        //player.transform.position = new Vector3(transform.position.x, transform.position.y, transform.position.z + speed * Time.deltaTime);
     }
 
     void setTarget()
@@ -89,13 +116,49 @@ public class Game : MonoBehaviour
 
     void ChangeLine()
     {
-        player.transform.position = Vector3.MoveTowards(player.transform.position, new Vector3(target.position.x, player.transform.position.y, player.transform.position.z), speed * Time.deltaTime);
+        player.transform.position = Vector3.MoveTowards(player.transform.position, new Vector3(target.position.x, player.transform.position.y, player.transform.position.z), lrSpeed * Time.deltaTime);
         print("Moving...");
+    }
+
+    void Jump()
+    {
+        player.transform.position = Vector3.MoveTowards(player.transform.position, new Vector3(player.transform.position.x, player.transform.position.y + jumpForce * jumpCoef, player.transform.position.z), jumpForce * Time.deltaTime); ;
     }
 
     IEnumerator StopChangeLine()
     {
-        yield return new WaitForSeconds(1);
+        yield return new WaitForSeconds(0.3f);
         needChangeLine = false;
+    }
+    
+    IEnumerator StopJump()
+    {
+        yield return new WaitForSeconds(0.3f);
+        needJump = false;
+    }
+
+    private void OnCollisionStay(Collision other)
+    {
+        if (other.gameObject.CompareTag("Ground"))
+        {
+            isGrounded = true;
+        }
+    }
+
+    private void OnCollisionExit(Collision other)
+    {
+        if (other.gameObject.CompareTag("Ground"))
+        {
+            isGrounded = false;
+        }
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("Coin"))
+        {
+            coins++;
+            CoinsTextScript.UpdateUI(coins);
+        }
     }
 }
